@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0a246a">
+    <title>PCChat Chess Mode</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'MS Sans Serif', sans-serif;
+            font-size: 11px;
+            background: #c0c0c0;
+            color: #000;
+            overflow: hidden;
+        }
+
+        .window {
+            border: 2px outset #c0c0c0;
+            background: #c0c0c0;
+            margin: 10px;
+            height: calc(100vh - 20px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .title-bar {
+            background: linear-gradient(90deg, #0a246a 0%, #a6caf0 100%);
+            color: white;
+            padding: 2px 4px;
+            font-weight: bold;
+            font-size: 11px;
+            text-align: center;
+        }
+
+        .content {
+            padding: 8px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            height: 0;
+        }
+
+        .login-screen {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-width: 320px;
+            margin: 20px auto;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        input[type="text"] {
+            border: 2px inset #c0c0c0;
+            padding: 2px 4px;
+            font-family: inherit;
+            font-size: 11px;
+            background: white;
+        }
+
+        button {
+            border: 2px outset #c0c0c0;
+            background: #c0c0c0;
+            padding: 4px 12px;
+            font-family: inherit;
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        button:active {
+            border: 2px inset #c0c0c0;
+        }
+
+        button:hover {
+            background: #d4d0c8;
+        }
+
+        .chess-screen {
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+            height: 100%;
+        }
+
+        .chess-header {
+            background: #d4d0c8;
+            border: 1px inset #c0c0c0;
+            padding: 4px 8px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .board-area {
+            display: flex;
+            gap: 12px;
+            flex: 1;
+            min-height: 0;
+            align-items: flex-start;
+        }
+
+        .board-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            border: 2px inset #c0c0c0;
+            background: #808080;
+            width: min(72vmin, 420px);
+            height: min(72vmin, 420px);
+        }
+
+        .square {
+            border: 1px solid #808080;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: "Segoe UI Symbol", "Noto Sans Symbols2", "Noto Sans Symbols", "Arial Unicode MS", "DejaVu Sans", "MS Sans Serif", sans-serif;
+            font-size: 24px;
+            line-height: 1;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .square.light {
+            background: #d4d0c8;
+        }
+
+        .square.dark {
+            background: #a0a0a0;
+        }
+
+        .square.selected {
+            outline: 2px dotted #000;
+            outline-offset: -4px;
+        }
+
+        .square.piece-white {
+            color: #f8f3e7;
+            text-shadow: 0 0 1px #000, 0 1px 1px #000;
+        }
+
+        .square.piece-black {
+            color: #151515;
+            text-shadow: 0 1px 0 #fff;
+        }
+
+        .side-panel {
+            border: 2px inset #c0c0c0;
+            background: #d4d0c8;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 220px;
+            flex: 1;
+        }
+
+        textarea {
+            border: 2px inset #c0c0c0;
+            padding: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            resize: none;
+            width: 100%;
+            min-height: 60px;
+        }
+
+        .panel-actions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .panel-block {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .status-bar {
+            border-top: 1px solid #808080;
+            padding: 2px 8px;
+            font-size: 10px;
+            background: #c0c0c0;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #00ff00;
+        }
+
+        .status-dot.disconnected {
+            background: #ff0000;
+        }
+
+        .error-msg {
+            color: #ff0000;
+            font-weight: bold;
+            margin: 8px 0;
+            padding: 4px;
+            background: #ffeeee;
+            border: 1px solid #ff0000;
+        }
+
+        .info-text {
+            color: #666;
+            font-size: 10px;
+            text-align: center;
+        }
+
+        @media (max-width: 900px) {
+            .board-area {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .board {
+                width: min(92vmin, 420px);
+                height: min(92vmin, 420px);
+            }
+
+            .side-panel {
+                min-width: auto;
+            }
+        }
+
+        @media (max-width: 600px) {
+            body {
+                font-size: 12px;
+            }
+
+            .window {
+                margin: 4px;
+                height: calc(100vh - 8px);
+            }
+
+            .title-bar {
+                padding: 4px 6px;
+            }
+
+            .content {
+                padding: 6px;
+            }
+
+            .board {
+                width: min(94vmin, 360px);
+                height: min(94vmin, 360px);
+            }
+
+            .square {
+                font-size: 20px;
+            }
+
+            textarea {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="window">
+        <div class="title-bar">
+            <span>PCChat Chess Mode</span>
+        </div>
+
+        <div class="content">
+            <div id="loginScreen" class="login-screen">
+                <h2 style="text-align: center; margin-bottom: 12px; color: #000080;">
+                    Chess Board Sync
+                </h2>
+
+                <div class="form-group">
+                    <label for="roomCodeInput">Room code:</label>
+                    <input type="text" id="roomCodeInput" placeholder="ex: room-abc" maxlength="80">
+                </div>
+
+                <button id="joinBtn" onclick="joinRoom()">Enter Board</button>
+
+                <div id="errorMsg" class="error-msg" style="display: none;"></div>
+
+                <div class="info-text">
+                    Use the same room code on every peer.
+                </div>
+                <div class="info-text">
+                    Uppercase pieces are white. Lowercase pieces are black.
+                </div>
+            </div>
+
+            <div id="chessScreen" class="chess-screen">
+                <div class="chess-header">
+                    <button onclick="leaveRoom()">Return</button>
+                    <span id="roomLabel">Room:</span>
+                    <span id="turnLabel">Turn: w</span>
+                </div>
+
+                <div class="board-area">
+                    <div class="board-wrap">
+                        <div id="board" class="board"></div>
+                    </div>
+
+                    <div class="side-panel">
+                        <div class="panel-block">
+                            <label for="fenInput">FEN:</label>
+                            <textarea id="fenInput" spellcheck="false"></textarea>
+                            <div class="panel-actions">
+                                <button onclick="applyFen()">Apply FEN</button>
+                                <button onclick="sendState()">Send State</button>
+                            </div>
+                        </div>
+
+                        <div class="panel-block">
+                            <div class="status-row">
+                                <span>Status</span>
+                                <span id="statusText">Disconnected</span>
+                            </div>
+                            <div class="status-row">
+                                <span>Seq</span>
+                                <span id="seqLabel">0</span>
+                            </div>
+                        </div>
+
+                        <div class="panel-actions">
+                            <button onclick="requestSync()">Request Sync</button>
+                            <button onclick="resetBoard()">Reset</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-item">
+                <div id="statusDot" class="status-dot disconnected"></div>
+                <span id="statusLabel">Disconnected</span>
+            </div>
+            <div class="status-item">
+                <span id="roomHint">No room</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+        const ranks = ['8', '7', '6', '5', '4', '3', '2', '1'];
+        const startFen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1';
+        const pieceSymbols = {
+            K: '&#9812;',
+            Q: '&#9813;',
+            R: '&#9814;',
+            B: '&#9815;',
+            N: '&#9816;',
+            P: '&#9817;',
+            k: '&#9818;',
+            q: '&#9819;',
+            r: '&#9820;',
+            b: '&#9821;',
+            n: '&#9822;',
+            p: '&#9823;'
+        };
+
+        let ws = null;
+        let roomCode = null;
+        let gameId = null;
+        let board = [];
+        let selectedSquare = null;
+        let gameSeq = 0;
+        let currentTurn = 'w';
+        let pendingHello = false;
+        let reconnectTimer = null;
+        const squareEls = new Map();
+
+        function buildBoard() {
+            const boardEl = document.getElementById('board');
+            boardEl.innerHTML = '';
+            squareEls.clear();
+
+            ranks.forEach((rank, rIndex) => {
+                files.forEach((file, fIndex) => {
+                    const square = document.createElement('button');
+                    const isLight = (rIndex + fIndex) % 2 === 0;
+                    square.type = 'button';
+                    square.className = `square ${isLight ? 'light' : 'dark'}`;
+                    square.dataset.square = `${file}${rank}`;
+                    square.addEventListener('click', () => handleSquareClick(square.dataset.square));
+                    boardEl.appendChild(square);
+                    squareEls.set(square.dataset.square, square);
+                });
+            });
+        }
+
+        function parseFen(fen) {
+            const parts = fen.trim().split(/\s+/);
+            if (!parts.length) return null;
+
+            const rows = parts[0].split('/');
+            if (rows.length !== 8) return null;
+
+            const parsed = [];
+            for (let r = 0; r < rows.length; r += 1) {
+                const row = [];
+                let file = 0;
+                for (const ch of rows[r]) {
+                    if (/\d/.test(ch)) {
+                        const empty = parseInt(ch, 10);
+                        for (let i = 0; i < empty; i += 1) {
+                            row.push(null);
+                        }
+                        file += empty;
+                    } else {
+                        row.push(ch);
+                        file += 1;
+                    }
+                }
+                if (file !== 8) return null;
+                parsed.push(row);
+            }
+
+            const turn = parts[1] === 'b' ? 'b' : 'w';
+            return { board: parsed, turn };
+        }
+
+        function buildFen() {
+            const rows = board.map((row) => {
+                let line = '';
+                let empty = 0;
+                row.forEach((piece) => {
+                    if (!piece) {
+                        empty += 1;
+                        return;
+                    }
+                    if (empty > 0) {
+                        line += empty.toString();
+                        empty = 0;
+                    }
+                    line += piece;
+                });
+                if (empty > 0) {
+                    line += empty.toString();
+                }
+                return line;
+            });
+            const placement = rows.join('/');
+            const fullmove = Math.floor(gameSeq / 2) + 1;
+            return `${placement} ${currentTurn} - - 0 ${fullmove}`;
+        }
+
+        function setBoardFromFen(fen) {
+            const parsed = parseFen(fen);
+            if (!parsed) return false;
+            board = parsed.board;
+            currentTurn = parsed.turn;
+            return true;
+        }
+
+        function renderBoard() {
+            squareEls.forEach((el, square) => {
+                const idx = squareToIndex(square);
+                const piece = board[idx.r][idx.f];
+                const symbol = piece ? pieceSymbols[piece] : '';
+                if (symbol) {
+                    el.innerHTML = symbol;
+                } else {
+                    el.textContent = piece || '';
+                }
+                el.classList.toggle('selected', square === selectedSquare);
+                el.classList.remove('piece-white', 'piece-black');
+                if (piece) {
+                    el.classList.add(piece === piece.toUpperCase() ? 'piece-white' : 'piece-black');
+                }
+            });
+        }
+
+        function squareToIndex(square) {
+            const file = files.indexOf(square[0]);
+            const rank = ranks.indexOf(square[1]);
+            return { r: rank, f: file };
+        }
+
+        function getPieceColor(piece) {
+            if (!piece) return null;
+            return piece === piece.toUpperCase() ? 'w' : 'b';
+        }
+
+        function isInsideBoard(pos) {
+            return pos.r >= 0 && pos.r < 8 && pos.f >= 0 && pos.f < 8;
+        }
+
+        function isClearPath(boardState, from, to) {
+            const stepR = Math.sign(to.r - from.r);
+            const stepF = Math.sign(to.f - from.f);
+            let r = from.r + stepR;
+            let f = from.f + stepF;
+            while (r !== to.r || f !== to.f) {
+                if (boardState[r][f]) {
+                    return false;
+                }
+                r += stepR;
+                f += stepF;
+            }
+            return true;
+        }
+
+        function cloneBoard(boardState) {
+            return boardState.map((row) => row.slice());
+        }
+
+        function applyMoveOnBoard(boardState, move, promotion) {
+            const from = squareToIndex(move.from);
+            const to = squareToIndex(move.to);
+            if (!isInsideBoard(from) || !isInsideBoard(to)) return false;
+
+            const piece = boardState[from.r][from.f];
+            if (!piece) return false;
+
+            boardState[from.r][from.f] = null;
+            let nextPiece = piece;
+
+            if (promotion && piece.toLowerCase() === 'p') {
+                nextPiece = piece === piece.toUpperCase() ? promotion.toUpperCase() : promotion.toLowerCase();
+            }
+
+            boardState[to.r][to.f] = nextPiece;
+            return true;
+        }
+
+        function canPieceAttack(piece, from, to, boardState) {
+            const type = piece.toLowerCase();
+            const color = getPieceColor(piece);
+            const deltaR = to.r - from.r;
+            const deltaF = to.f - from.f;
+            const absR = Math.abs(deltaR);
+            const absF = Math.abs(deltaF);
+
+            if (type === 'p') {
+                const dir = color === 'w' ? -1 : 1;
+                return deltaR === dir && absF === 1;
+            }
+
+            if (type === 'n') {
+                return (absR === 2 && absF === 1) || (absR === 1 && absF === 2);
+            }
+
+            if (type === 'b') {
+                return absR === absF && isClearPath(boardState, from, to);
+            }
+
+            if (type === 'r') {
+                return (deltaR === 0 || deltaF === 0) && isClearPath(boardState, from, to);
+            }
+
+            if (type === 'q') {
+                const straight = deltaR === 0 || deltaF === 0;
+                const diagonal = absR === absF;
+                return (straight || diagonal) && isClearPath(boardState, from, to);
+            }
+
+            if (type === 'k') {
+                return absR <= 1 && absF <= 1;
+            }
+
+            return false;
+        }
+
+        function isSquareAttacked(target, attackerColor, boardState) {
+            for (let r = 0; r < 8; r += 1) {
+                for (let f = 0; f < 8; f += 1) {
+                    const piece = boardState[r][f];
+                    if (!piece) continue;
+                    if (getPieceColor(piece) !== attackerColor) continue;
+                    if (canPieceAttack(piece, { r, f }, target, boardState)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        function isKingInCheck(color, boardState) {
+            const kingSymbol = color === 'w' ? 'K' : 'k';
+            let kingPos = null;
+
+            for (let r = 0; r < 8; r += 1) {
+                for (let f = 0; f < 8; f += 1) {
+                    if (boardState[r][f] === kingSymbol) {
+                        kingPos = { r, f };
+                        break;
+                    }
+                }
+                if (kingPos) break;
+            }
+
+            if (!kingPos) return false;
+
+            const attackerColor = color === 'w' ? 'b' : 'w';
+            return isSquareAttacked(kingPos, attackerColor, boardState);
+        }
+
+        function isLegalMove(move, promotion) {
+            const from = squareToIndex(move.from);
+            const to = squareToIndex(move.to);
+            if (!isInsideBoard(from) || !isInsideBoard(to)) return false;
+            if (from.r === to.r && from.f === to.f) return false;
+
+            const piece = board[from.r][from.f];
+            if (!piece) return false;
+
+            const color = getPieceColor(piece);
+            if (color !== currentTurn) return false;
+
+            const target = board[to.r][to.f];
+            if (target && getPieceColor(target) === color) return false;
+
+            const type = piece.toLowerCase();
+            const deltaR = to.r - from.r;
+            const deltaF = to.f - from.f;
+            const absR = Math.abs(deltaR);
+            const absF = Math.abs(deltaF);
+
+            if (type === 'p') {
+                const dir = color === 'w' ? -1 : 1;
+                const startRow = color === 'w' ? 6 : 1;
+
+                if (deltaF === 0) {
+                    if (deltaR === dir && !target) {
+                    } else if (deltaR === 2 * dir && from.r === startRow && !target) {
+                        const between = { r: from.r + dir, f: from.f };
+                        if (board[between.r][between.f]) return false;
+                    } else {
+                        return false;
+                    }
+                } else if (absF === 1 && deltaR === dir) {
+                    if (!target || getPieceColor(target) === color) return false;
+                } else {
+                    return false;
+                }
+            } else if (type === 'n') {
+                if (!((absR === 2 && absF === 1) || (absR === 1 && absF === 2))) {
+                    return false;
+                }
+            } else if (type === 'b') {
+                if (absR !== absF || !isClearPath(board, from, to)) return false;
+            } else if (type === 'r') {
+                if ((deltaR !== 0 && deltaF !== 0) || !isClearPath(board, from, to)) return false;
+            } else if (type === 'q') {
+                const straight = deltaR === 0 || deltaF === 0;
+                const diagonal = absR === absF;
+                if ((!straight && !diagonal) || !isClearPath(board, from, to)) return false;
+            } else if (type === 'k') {
+                if (absR > 1 || absF > 1) return false;
+            } else {
+                return false;
+            }
+
+            const testBoard = cloneBoard(board);
+            applyMoveOnBoard(testBoard, move, promotion);
+            if (isKingInCheck(color, testBoard)) return false;
+
+            return true;
+        }
+
+        function applyMove(move, promotion) {
+            if (!applyMoveOnBoard(board, move, promotion)) return false;
+            currentTurn = currentTurn === 'w' ? 'b' : 'w';
+            return true;
+        }
+
+        function maybePromotion(piece, toSquare) {
+            if (!piece || piece.toLowerCase() !== 'p') return null;
+            const targetRank = toSquare[1];
+            if (targetRank === '8' || targetRank === '1') {
+                return 'q';
+            }
+            return null;
+        }
+
+        function handleSquareClick(square) {
+            if (!roomCode) return;
+
+            const idx = squareToIndex(square);
+            const piece = board[idx.r][idx.f];
+
+            if (!selectedSquare) {
+                if (!piece) return;
+                if (getPieceColor(piece) !== currentTurn) return;
+                selectedSquare = square;
+                renderBoard();
+                return;
+            }
+
+            if (selectedSquare === square) {
+                selectedSquare = null;
+                renderBoard();
+                return;
+            }
+
+            const fromIdx = squareToIndex(selectedSquare);
+            const movingPiece = board[fromIdx.r][fromIdx.f];
+            if (!movingPiece) {
+                selectedSquare = null;
+                renderBoard();
+                return;
+            }
+
+            if (piece && getPieceColor(piece) === getPieceColor(movingPiece)) {
+                if (getPieceColor(piece) === currentTurn) {
+                    selectedSquare = square;
+                    renderBoard();
+                }
+                return;
+            }
+            const promotion = maybePromotion(movingPiece, square);
+            const move = { from: selectedSquare, to: square };
+            if (promotion) {
+                move.promotion = promotion;
+            }
+
+            if (!isLegalMove(move, promotion)) {
+                return;
+            }
+
+            if (applyMove(move, promotion)) {
+                gameSeq += 1;
+                selectedSquare = null;
+                const fen = buildFen();
+                updateUi(fen);
+                renderBoard();
+                sendMessage({
+                    type: 'chess/move',
+                    gameId,
+                    seq: gameSeq,
+                    move,
+                    fen
+                });
+            } else {
+                selectedSquare = null;
+                renderBoard();
+            }
+        }
+
+        function updateUi(fenOverride) {
+            const fen = fenOverride || buildFen();
+            const fenInput = document.getElementById('fenInput');
+            fenInput.value = fen;
+            document.getElementById('seqLabel').textContent = gameSeq.toString();
+            document.getElementById('turnLabel').textContent = `Turn: ${currentTurn}`;
+            document.getElementById('roomLabel').textContent = roomCode ? `Room: ${roomCode}` : 'Room:';
+            document.getElementById('roomHint').textContent = roomCode ? `Room: ${roomCode}` : 'No room';
+        }
+
+        function updateStatus(text, connected) {
+            document.getElementById('statusText').textContent = text;
+            document.getElementById('statusLabel').textContent = text;
+            const dot = document.getElementById('statusDot');
+            if (connected) {
+                dot.classList.remove('disconnected');
+            } else {
+                dot.classList.add('disconnected');
+            }
+        }
+
+        function showError(message) {
+            const errorEl = document.getElementById('errorMsg');
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+        }
+
+        function hideError() {
+            document.getElementById('errorMsg').style.display = 'none';
+        }
+
+        function connectWs() {
+            if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) {
+                return;
+            }
+
+            const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+            ws = new WebSocket(`${protocol}://${window.location.host}/ws`);
+
+            ws.addEventListener('open', () => {
+                updateStatus('Connected', true);
+                if (pendingHello && roomCode) {
+                    sendHello();
+                    pendingHello = false;
+                }
+            });
+
+            ws.addEventListener('close', () => {
+                updateStatus('Disconnected', false);
+                scheduleReconnect();
+            });
+
+            ws.addEventListener('message', (event) => {
+                handleWsMessage(event.data);
+            });
+
+            ws.addEventListener('error', () => {
+                updateStatus('Disconnected', false);
+            });
+        }
+
+        function scheduleReconnect() {
+            if (reconnectTimer || !roomCode) return;
+            reconnectTimer = setTimeout(() => {
+                reconnectTimer = null;
+                connectWs();
+            }, 1500);
+        }
+
+        function sendMessage(payload) {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                showError('Not connected to local server.');
+                return false;
+            }
+            ws.send(JSON.stringify(payload));
+            return true;
+        }
+
+        function sendHello() {
+            sendMessage({
+                type: 'chess/hello',
+                roomCode,
+                gameId
+            });
+            sendMessage({
+                type: 'chess/state-req',
+                gameId
+            });
+        }
+
+        function joinRoom() {
+            const input = document.getElementById('roomCodeInput').value.trim();
+            if (!input) {
+                showError('Room code is required.');
+                return;
+            }
+
+            hideError();
+            roomCode = input;
+            gameId = `room:${roomCode}`;
+            selectedSquare = null;
+            gameSeq = 0;
+            currentTurn = 'w';
+            setBoardFromFen(startFen);
+            renderBoard();
+            updateUi();
+            showChessScreen();
+
+            connectWs();
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                sendHello();
+            } else {
+                pendingHello = true;
+            }
+        }
+
+        function leaveRoom() {
+            roomCode = null;
+            gameId = null;
+            pendingHello = false;
+            updateUi();
+            showLoginScreen();
+            if (ws) {
+                ws.close();
+                ws = null;
+            }
+        }
+
+        function applyFen() {
+            const fenInput = document.getElementById('fenInput').value.trim();
+            if (!fenInput) return;
+            if (!setBoardFromFen(fenInput)) {
+                showError('Invalid FEN.');
+                return;
+            }
+
+            hideError();
+            gameSeq += 1;
+            const fen = buildFen();
+            updateUi(fen);
+            renderBoard();
+            sendMessage({
+                type: 'chess/state',
+                gameId,
+                seq: gameSeq,
+                fen
+            });
+        }
+
+        function sendState() {
+            gameSeq += 1;
+            const fen = buildFen();
+            updateUi(fen);
+            sendMessage({
+                type: 'chess/state',
+                gameId,
+                seq: gameSeq,
+                fen
+            });
+        }
+
+        function requestSync() {
+            sendMessage({
+                type: 'chess/state-req',
+                gameId
+            });
+        }
+
+        function resetBoard() {
+            setBoardFromFen(startFen);
+            gameSeq += 1;
+            const fen = buildFen();
+            updateUi(fen);
+            renderBoard();
+            sendMessage({
+                type: 'chess/state',
+                gameId,
+                seq: gameSeq,
+                fen
+            });
+        }
+
+        function handleWsMessage(raw) {
+            let message;
+            try {
+                message = JSON.parse(raw);
+            } catch (err) {
+                return;
+            }
+
+            if (!message || !message.type) return;
+
+            if (message.type === 'chess/joined') {
+                updateStatus('Connected', true);
+                return;
+            }
+
+            if (message.type === 'chess/error') {
+                showError(message.message || 'Error from server.');
+                return;
+            }
+
+            if (message.type === 'chess/state') {
+                const incomingSeq = typeof message.seq === 'number' ? message.seq : null;
+                if (incomingSeq !== null && incomingSeq < gameSeq) {
+                    return;
+                }
+                if (!message.fen || !setBoardFromFen(message.fen)) {
+                    return;
+                }
+                if (incomingSeq !== null) {
+                    gameSeq = incomingSeq;
+                }
+                updateUi(message.fen);
+                renderBoard();
+                return;
+            }
+
+            if (message.type === 'chess/move') {
+                const incomingSeq = typeof message.seq === 'number' ? message.seq : null;
+                if (incomingSeq !== null && incomingSeq <= gameSeq) {
+                    return;
+                }
+
+                if (message.fen && setBoardFromFen(message.fen)) {
+                    if (incomingSeq !== null) {
+                        gameSeq = incomingSeq;
+                    }
+                    updateUi(message.fen);
+                    renderBoard();
+                    return;
+                }
+
+                if (!message.move) return;
+                if (!applyMove(message.move, message.move.promotion)) return;
+                if (incomingSeq !== null) {
+                    gameSeq = incomingSeq;
+                } else {
+                    gameSeq += 1;
+                }
+                updateUi();
+                renderBoard();
+            }
+        }
+
+        function showLoginScreen() {
+            document.getElementById('loginScreen').style.display = 'flex';
+            document.getElementById('chessScreen').style.display = 'none';
+            document.getElementById('roomCodeInput').focus();
+        }
+
+        function showChessScreen() {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('chessScreen').style.display = 'flex';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            buildBoard();
+            setBoardFromFen(startFen);
+            renderBoard();
+            updateUi();
+            showLoginScreen();
+        });
+
+        window.addEventListener('beforeunload', () => {
+            if (ws) {
+                ws.close();
+            }
+        });
+    </script>
+</body>
+</html>
