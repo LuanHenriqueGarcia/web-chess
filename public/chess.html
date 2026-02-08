@@ -1,16 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0a246a">
     <title>PCChat Chess Mode</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'MS Sans Serif', sans-serif;
@@ -47,25 +43,19 @@
             height: 0;
         }
 
+        /* ── Login ── */
         .login-screen {
             display: flex;
             flex-direction: column;
             gap: 12px;
-            max-width: 320px;
+            max-width: 340px;
             margin: 20px auto;
         }
 
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
+        .form-group { display: flex; flex-direction: column; gap: 4px; }
+        label { font-weight: bold; }
 
-        label {
-            font-weight: bold;
-        }
-
-        input[type="text"] {
+        input[type="text"], select {
             border: 2px inset #c0c0c0;
             padding: 2px 4px;
             font-family: inherit;
@@ -81,15 +71,10 @@
             font-size: 11px;
             cursor: pointer;
         }
+        button:active { border: 2px inset #c0c0c0; }
+        button:hover { background: #d4d0c8; }
 
-        button:active {
-            border: 2px inset #c0c0c0;
-        }
-
-        button:hover {
-            background: #d4d0c8;
-        }
-
+        /* ── Chess screen ── */
         .chess-screen {
             display: none;
             flex-direction: column;
@@ -105,7 +90,19 @@
             display: flex;
             align-items: center;
             gap: 12px;
+            flex-wrap: wrap;
         }
+
+        .color-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border: 1px solid #000;
+            font-weight: bold;
+            font-size: 11px;
+        }
+        .color-badge.white { background: #fff; color: #000; }
+        .color-badge.black { background: #222; color: #fff; }
+        .color-badge.spectator { background: #888; color: #fff; }
 
         .board-area {
             display: flex;
@@ -115,20 +112,42 @@
             align-items: flex-start;
         }
 
-        .board-wrap {
+        .board-column {
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 4px;
+            align-items: center;
         }
 
+        /* ── Clock ── */
+        .clock {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 10px;
+            border: 2px inset #c0c0c0;
+            background: #d4d0c8;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            font-weight: bold;
+            min-width: 200px;
+            justify-content: space-between;
+        }
+        .clock.active { background: #ffffcc; border-color: #aa8800; }
+        .clock.timeout { background: #ffcccc; border-color: #cc0000; color: #cc0000; }
+        .clock .clock-icon { font-size: 14px; }
+        .clock .clock-label { font-size: 11px; font-family: 'MS Sans Serif', sans-serif; min-width: 50px; }
+        .clock .clock-time { min-width: 60px; text-align: right; }
+
+        /* ── Board ── */
         .board {
             display: grid;
             grid-template-columns: repeat(8, 1fr);
             grid-template-rows: repeat(8, 1fr);
             border: 2px inset #c0c0c0;
             background: #808080;
-            width: min(72vmin, 420px);
-            height: min(72vmin, 420px);
+            width: min(60vmin, 400px);
+            height: min(60vmin, 400px);
         }
 
         .square {
@@ -136,47 +155,86 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-family: "Segoe UI Symbol", "Noto Sans Symbols2", "Noto Sans Symbols", "Arial Unicode MS", "DejaVu Sans", "MS Sans Serif", sans-serif;
+            font-family: "Segoe UI Symbol", "Noto Sans Symbols2", "Arial Unicode MS", sans-serif;
             font-size: 24px;
             line-height: 1;
             cursor: pointer;
             user-select: none;
+            position: relative;
         }
+        .square.light { background: #d4d0c8; }
+        .square.dark { background: #a0a0a0; }
+        .square.selected { outline: 2px dotted #000; outline-offset: -4px; }
+        .square.highlight { background: #aad4aa !important; }
+        .square.piece-white { color: #f8f3e7; text-shadow: 0 0 1px #000, 0 1px 1px #000; }
+        .square.piece-black { color: #151515; text-shadow: 0 1px 0 #fff; }
 
-        .square.light {
-            background: #d4d0c8;
-        }
-
-        .square.dark {
-            background: #a0a0a0;
-        }
-
-        .square.selected {
-            outline: 2px dotted #000;
-            outline-offset: -4px;
-        }
-
-        .square.piece-white {
-            color: #f8f3e7;
-            text-shadow: 0 0 1px #000, 0 1px 1px #000;
-        }
-
-        .square.piece-black {
-            color: #151515;
-            text-shadow: 0 1px 0 #fff;
-        }
-
+        /* ── Side panel (chat + controls) ── */
         .side-panel {
             border: 2px inset #c0c0c0;
             background: #d4d0c8;
             padding: 8px;
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            min-width: 220px;
+            gap: 6px;
+            min-width: 240px;
             flex: 1;
+            max-height: min(60vmin, 400px);
+            height: min(60vmin, 400px);
         }
 
+        .panel-tabs {
+            display: flex;
+            gap: 2px;
+        }
+        .panel-tab {
+            padding: 3px 10px;
+            font-size: 11px;
+            border: 2px outset #c0c0c0;
+            background: #c0c0c0;
+            cursor: pointer;
+        }
+        .panel-tab.active {
+            background: #d4d0c8;
+            border-bottom-color: #d4d0c8;
+            font-weight: bold;
+        }
+
+        .tab-content { display: none; flex-direction: column; flex: 1; gap: 6px; min-height: 0; }
+        .tab-content.active { display: flex; }
+
+        /* ── Chat ── */
+        .chat-messages {
+            flex: 1;
+            border: 2px inset #c0c0c0;
+            background: white;
+            overflow-y: auto;
+            padding: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            line-height: 1.3;
+        }
+
+        .chat-msg { margin-bottom: 2px; word-wrap: break-word; }
+        .chat-msg .ts { color: #666; font-size: 9px; }
+        .chat-msg .name { font-weight: bold; }
+        .chat-msg .name.w-color { color: #000080; }
+        .chat-msg .name.b-color { color: #800000; }
+        .chat-msg.system { color: #008000; font-style: italic; }
+
+        .chat-input-row {
+            display: flex;
+            gap: 4px;
+        }
+        .chat-input-row input {
+            flex: 1;
+            border: 2px inset #c0c0c0;
+            padding: 3px 4px;
+            font-family: inherit;
+            font-size: 11px;
+        }
+
+        /* ── Controls tab ── */
         textarea {
             border: 2px inset #c0c0c0;
             padding: 4px;
@@ -184,26 +242,32 @@
             font-size: 11px;
             resize: none;
             width: 100%;
-            min-height: 60px;
+            min-height: 50px;
         }
+        .panel-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+        .status-row { display: flex; justify-content: space-between; }
 
-        .panel-actions {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
+        /* ── Game over overlay ── */
+        .game-over-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
         }
-
-        .panel-block {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
+        .game-over-overlay.visible { display: flex; }
+        .game-over-box {
+            background: #c0c0c0;
+            border: 2px outset #c0c0c0;
+            padding: 20px 30px;
+            text-align: center;
         }
+        .game-over-box h2 { margin-bottom: 12px; color: #000080; }
+        .game-over-box p { margin-bottom: 16px; font-size: 13px; }
 
-        .status-row {
-            display: flex;
-            justify-content: space-between;
-        }
-
+        /* ── Status bar ── */
         .status-bar {
             border-top: 1px solid #808080;
             padding: 2px 8px;
@@ -212,23 +276,9 @@
             display: flex;
             justify-content: space-between;
         }
-
-        .status-item {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #00ff00;
-        }
-
-        .status-dot.disconnected {
-            background: #ff0000;
-        }
+        .status-item { display: flex; align-items: center; gap: 4px; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #00ff00; }
+        .status-dot.disconnected { background: #ff0000; }
 
         .error-msg {
             color: #ff0000;
@@ -238,267 +288,345 @@
             background: #ffeeee;
             border: 1px solid #ff0000;
         }
+        .info-text { color: #666; font-size: 10px; text-align: center; }
 
-        .info-text {
-            color: #666;
-            font-size: 10px;
-            text-align: center;
-        }
-
+        /* ── Responsive ── */
         @media (max-width: 900px) {
-            .board-area {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .board {
-                width: min(92vmin, 420px);
-                height: min(92vmin, 420px);
-            }
-
-            .side-panel {
-                min-width: auto;
-            }
+            .board-area { flex-direction: column; align-items: stretch; }
+            .board { width: min(80vmin, 360px); height: min(80vmin, 360px); }
+            .side-panel { min-width: auto; max-height: 200px; height: 200px; }
+            .clock { min-width: 160px; font-size: 14px; }
         }
-
         @media (max-width: 600px) {
-            body {
-                font-size: 12px;
-            }
-
-            .window {
-                margin: 4px;
-                height: calc(100vh - 8px);
-            }
-
-            .title-bar {
-                padding: 4px 6px;
-            }
-
-            .content {
-                padding: 6px;
-            }
-
-            .board {
-                width: min(94vmin, 360px);
-                height: min(94vmin, 360px);
-            }
-
-            .square {
-                font-size: 20px;
-            }
-
-            textarea {
-                font-size: 12px;
-            }
+            .window { margin: 4px; height: calc(100vh - 8px); }
+            .board { width: min(90vmin, 320px); height: min(90vmin, 320px); }
+            .square { font-size: 18px; }
         }
     </style>
 </head>
 <body>
     <div class="window">
-        <div class="title-bar">
-            <span>PCChat Chess Mode</span>
-        </div>
+        <div class="title-bar">&#9823; PCChat Chess Mode</div>
 
         <div class="content">
+            <!-- LOGIN -->
             <div id="loginScreen" class="login-screen">
-                <h2 style="text-align: center; margin-bottom: 12px; color: #000080;">
-                    Chess Board Sync
-                </h2>
+                <h2 style="text-align:center; margin-bottom:12px; color:#000080;">&#9823; Xadrez P2P</h2>
 
                 <div class="form-group">
-                    <label for="roomCodeInput">Room code:</label>
-                    <input type="text" id="roomCodeInput" placeholder="ex: room-abc" maxlength="80">
+                    <label for="roomCodeInput">Codigo da sala:</label>
+                    <input type="text" id="roomCodeInput" placeholder="ex: sala-abc" maxlength="80">
                 </div>
 
-                <button id="joinBtn" onclick="joinRoom()">Enter Board</button>
-
-                <div id="errorMsg" class="error-msg" style="display: none;"></div>
-
-                <div class="info-text">
-                    Use the same room code on every peer.
+                <div class="form-group">
+                    <label for="nicknameInput">Seu apelido:</label>
+                    <input type="text" id="nicknameInput" placeholder="ex: Joao" maxlength="20">
                 </div>
+
+                <div class="form-group">
+                    <label for="timeSelect">Tempo por jogador:</label>
+                    <select id="timeSelect">
+                        <option value="3">3 minutos</option>
+                        <option value="5">5 minutos</option>
+                        <option value="10" selected>10 minutos</option>
+                        <option value="15">15 minutos</option>
+                        <option value="30">30 minutos</option>
+                    </select>
+                </div>
+
+                <button id="joinBtn" onclick="joinRoom()">Entrar na Partida</button>
+
+                <div id="errorMsg" class="error-msg" style="display:none;"></div>
+
                 <div class="info-text">
-                    Uppercase pieces are white. Lowercase pieces are black.
+                    Use o mesmo codigo de sala no outro navegador/PC.<br>
+                    Primeiro a entrar joga de <b>Brancas</b>, segundo de <b>Pretas</b>.
                 </div>
             </div>
 
+            <!-- CHESS SCREEN -->
             <div id="chessScreen" class="chess-screen">
                 <div class="chess-header">
-                    <button onclick="leaveRoom()">Return</button>
-                    <span id="roomLabel">Room:</span>
-                    <span id="turnLabel">Turn: w</span>
+                    <button onclick="leaveRoom()">&#8592; Sair</button>
+                    <span id="roomLabel">Sala:</span>
+                    <span id="turnLabel">Vez: Brancas</span>
+                    <span id="colorBadge" class="color-badge white">Brancas</span>
                 </div>
 
                 <div class="board-area">
-                    <div class="board-wrap">
+                    <div class="board-column">
+                        <div id="clockTop" class="clock">
+                            <span class="clock-icon">&#9823;</span>
+                            <span id="clockTopLabel" class="clock-label">Pretas</span>
+                            <span id="clockTopTime" class="clock-time">10:00</span>
+                        </div>
+
                         <div id="board" class="board"></div>
+
+                        <div id="clockBottom" class="clock">
+                            <span class="clock-icon">&#9817;</span>
+                            <span id="clockBottomLabel" class="clock-label">Brancas</span>
+                            <span id="clockBottomTime" class="clock-time">10:00</span>
+                        </div>
                     </div>
 
                     <div class="side-panel">
-                        <div class="panel-block">
-                            <label for="fenInput">FEN:</label>
-                            <textarea id="fenInput" spellcheck="false"></textarea>
-                            <div class="panel-actions">
-                                <button onclick="applyFen()">Apply FEN</button>
-                                <button onclick="sendState()">Send State</button>
+                        <div class="panel-tabs">
+                            <button class="panel-tab active" onclick="switchTab('chat')">&#128172; Chat</button>
+                            <button class="panel-tab" onclick="switchTab('controls')">&#9881; Controles</button>
+                        </div>
+
+                        <div id="tabChat" class="tab-content active">
+                            <div id="chatMessages" class="chat-messages"></div>
+                            <div class="chat-input-row">
+                                <input type="text" id="chatInput" placeholder="Mensagem..." maxlength="300"
+                                       onkeypress="if(event.key==='Enter')sendChat()">
+                                <button onclick="sendChat()">Enviar</button>
                             </div>
                         </div>
 
-                        <div class="panel-block">
-                            <div class="status-row">
-                                <span>Status</span>
-                                <span id="statusText">Disconnected</span>
+                        <div id="tabControls" class="tab-content">
+                            <div class="form-group">
+                                <label for="fenInput">FEN:</label>
+                                <textarea id="fenInput" spellcheck="false"></textarea>
+                                <div class="panel-actions">
+                                    <button onclick="applyFen()">Aplicar FEN</button>
+                                    <button onclick="sendState()">Enviar Estado</button>
+                                </div>
                             </div>
                             <div class="status-row">
                                 <span>Seq</span>
                                 <span id="seqLabel">0</span>
                             </div>
-                        </div>
-
-                        <div class="panel-actions">
-                            <button onclick="requestSync()">Request Sync</button>
-                            <button onclick="resetBoard()">Reset</button>
+                            <div class="panel-actions">
+                                <button onclick="requestSync()">Sincronizar</button>
+                                <button onclick="resetBoard()">Reiniciar</button>
+                            </div>
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <div id="gameOverOverlay" class="game-over-overlay">
+            <div class="game-over-box">
+                <h2 id="gameOverTitle">Fim de Jogo</h2>
+                <p id="gameOverMsg"></p>
+                <button onclick="closeGameOver()">OK</button>
+                <button onclick="resetBoard(); closeGameOver();">Nova Partida</button>
             </div>
         </div>
 
         <div class="status-bar">
             <div class="status-item">
                 <div id="statusDot" class="status-dot disconnected"></div>
-                <span id="statusLabel">Disconnected</span>
+                <span id="statusLabel">Desconectado</span>
             </div>
             <div class="status-item">
-                <span id="roomHint">No room</span>
+                <span id="roomHint">Sem sala</span>
             </div>
         </div>
     </div>
 
     <script>
-        const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
-        const ranks = ['8', '7', '6', '5', '4', '3', '2', '1'];
+        /* ═══════════════════════════════════════════
+           CONSTANTS & STATE
+        ═══════════════════════════════════════════ */
+        const files = ['a','b','c','d','e','f','g','h'];
+        const ranks = ['8','7','6','5','4','3','2','1'];
         const startFen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1';
         const pieceSymbols = {
-            K: '&#9812;',
-            Q: '&#9813;',
-            R: '&#9814;',
-            B: '&#9815;',
-            N: '&#9816;',
-            P: '&#9817;',
-            k: '&#9818;',
-            q: '&#9819;',
-            r: '&#9820;',
-            b: '&#9821;',
-            n: '&#9822;',
-            p: '&#9823;'
+            K:'&#9812;',Q:'&#9813;',R:'&#9814;',B:'&#9815;',N:'&#9816;',P:'&#9817;',
+            k:'&#9818;',q:'&#9819;',r:'&#9820;',b:'&#9821;',n:'&#9822;',p:'&#9823;'
         };
 
         let ws = null;
         let roomCode = null;
         let gameId = null;
+        let nickname = 'Anon';
+        let myColor = null;          // 'w', 'b' or 'spectator'
         let board = [];
         let selectedSquare = null;
         let gameSeq = 0;
         let currentTurn = 'w';
         let pendingHello = false;
         let reconnectTimer = null;
+        let gameOver = false;
         const squareEls = new Map();
 
+        // Clock state (in seconds)
+        let clockWhite = 600;
+        let clockBlack = 600;
+        let clockInterval = null;
+        let clockStarted = false;
+        let initialTime = 600;
+
+        /* ═══════════════════════════════════════════
+           TABS
+        ═══════════════════════════════════════════ */
+        function switchTab(tab) {
+            document.querySelectorAll('.panel-tab').forEach(function(t) { t.classList.remove('active'); });
+            document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
+            if (tab === 'chat') {
+                document.querySelectorAll('.panel-tab')[0].classList.add('active');
+                document.getElementById('tabChat').classList.add('active');
+            } else {
+                document.querySelectorAll('.panel-tab')[1].classList.add('active');
+                document.getElementById('tabControls').classList.add('active');
+            }
+        }
+
+        /* ═══════════════════════════════════════════
+           CLOCK
+        ═══════════════════════════════════════════ */
+        function formatClock(seconds) {
+            if (seconds < 0) seconds = 0;
+            var m = Math.floor(seconds / 60);
+            var s = seconds % 60;
+            return m + ':' + (s < 10 ? '0' : '') + s;
+        }
+
+        function renderClocks() {
+            var topColor = myColor === 'b' ? 'w' : 'b';
+            var bottomColor = myColor === 'b' ? 'b' : 'w';
+
+            var topTime = topColor === 'w' ? clockWhite : clockBlack;
+            var bottomTime = bottomColor === 'w' ? clockWhite : clockBlack;
+
+            document.getElementById('clockTopLabel').textContent = topColor === 'w' ? 'Brancas' : 'Pretas';
+            document.getElementById('clockBottomLabel').textContent = bottomColor === 'w' ? 'Brancas' : 'Pretas';
+            document.getElementById('clockTopTime').textContent = formatClock(topTime);
+            document.getElementById('clockBottomTime').textContent = formatClock(bottomTime);
+
+            document.querySelector('#clockTop .clock-icon').textContent = topColor === 'w' ? '\u2659' : '\u265F';
+            document.querySelector('#clockBottom .clock-icon').textContent = bottomColor === 'w' ? '\u2659' : '\u265F';
+
+            var topEl = document.getElementById('clockTop');
+            var bottomEl = document.getElementById('clockBottom');
+            topEl.classList.toggle('active', currentTurn === topColor && clockStarted && !gameOver);
+            bottomEl.classList.toggle('active', currentTurn === bottomColor && clockStarted && !gameOver);
+            topEl.classList.toggle('timeout', topTime <= 0);
+            bottomEl.classList.toggle('timeout', bottomTime <= 0);
+        }
+
+        function startClock() {
+            if (clockInterval) return;
+            clockStarted = true;
+            clockInterval = setInterval(function() {
+                if (gameOver) { stopClock(); return; }
+                if (currentTurn === 'w') {
+                    clockWhite = Math.max(0, clockWhite - 1);
+                    if (clockWhite <= 0) handleTimeout('w');
+                } else {
+                    clockBlack = Math.max(0, clockBlack - 1);
+                    if (clockBlack <= 0) handleTimeout('b');
+                }
+                renderClocks();
+            }, 1000);
+        }
+
+        function stopClock() {
+            if (clockInterval) {
+                clearInterval(clockInterval);
+                clockInterval = null;
+            }
+        }
+
+        function handleTimeout(color) {
+            stopClock();
+            gameOver = true;
+            var winner = color === 'w' ? 'Pretas' : 'Brancas';
+            var loser = color === 'w' ? 'Brancas' : 'Pretas';
+            showGameOver('Tempo esgotado!', loser + ' perdeu por tempo. ' + winner + ' vencem!');
+            addSystemChat('Tempo esgotado! ' + loser + ' perdeu por tempo! ' + winner + ' vencem!');
+            sendWsMessage({ type: 'chess/timeout', gameId: gameId, loserColor: color });
+        }
+
+        /* ═══════════════════════════════════════════
+           GAME OVER OVERLAY
+        ═══════════════════════════════════════════ */
+        function showGameOver(title, msg) {
+            document.getElementById('gameOverTitle').textContent = title;
+            document.getElementById('gameOverMsg').textContent = msg;
+            document.getElementById('gameOverOverlay').classList.add('visible');
+        }
+
+        function closeGameOver() {
+            document.getElementById('gameOverOverlay').classList.remove('visible');
+        }
+
+        /* ═══════════════════════════════════════════
+           CHAT
+        ═══════════════════════════════════════════ */
+        function addChatMessage(name, text, color, timestamp) {
+            var el = document.getElementById('chatMessages');
+            var div = document.createElement('div');
+            div.className = 'chat-msg';
+            var t = new Date(timestamp || Date.now()).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            var colorClass = color === 'w' ? 'w-color' : color === 'b' ? 'b-color' : '';
+            div.innerHTML = '<span class="ts">[' + t + ']</span> <span class="name ' + colorClass + '">' + escapeHtml(name) + ':</span> ' + escapeHtml(text);
+            el.appendChild(div);
+            el.scrollTop = el.scrollHeight;
+        }
+
+        function addSystemChat(text) {
+            var el = document.getElementById('chatMessages');
+            var div = document.createElement('div');
+            div.className = 'chat-msg system';
+            div.textContent = text;
+            el.appendChild(div);
+            el.scrollTop = el.scrollHeight;
+        }
+
+        function sendChat() {
+            var input = document.getElementById('chatInput');
+            var text = input.value.trim();
+            if (!text || !roomCode) return;
+            addChatMessage(nickname, text, myColor, Date.now());
+            sendWsMessage({ type: 'chess/chat', username: nickname, text: text, color: myColor });
+            input.value = '';
+            input.focus();
+        }
+
+        function escapeHtml(text) {
+            var div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        /* ═══════════════════════════════════════════
+           BOARD BUILD & RENDER
+        ═══════════════════════════════════════════ */
         function buildBoard() {
-            const boardEl = document.getElementById('board');
+            var boardEl = document.getElementById('board');
             boardEl.innerHTML = '';
             squareEls.clear();
 
-            ranks.forEach((rank, rIndex) => {
-                files.forEach((file, fIndex) => {
-                    const square = document.createElement('button');
-                    const isLight = (rIndex + fIndex) % 2 === 0;
-                    square.type = 'button';
-                    square.className = `square ${isLight ? 'light' : 'dark'}`;
-                    square.dataset.square = `${file}${rank}`;
-                    square.addEventListener('click', () => handleSquareClick(square.dataset.square));
-                    boardEl.appendChild(square);
-                    squareEls.set(square.dataset.square, square);
+            var renderRanks = myColor === 'b' ? ranks.slice().reverse() : ranks.slice();
+            var renderFiles = myColor === 'b' ? files.slice().reverse() : files.slice();
+
+            renderRanks.forEach(function(rank) {
+                renderFiles.forEach(function(file) {
+                    var sq = document.createElement('button');
+                    var origR = ranks.indexOf(rank);
+                    var origF = files.indexOf(file);
+                    var isLight = (origR + origF) % 2 === 0;
+                    sq.type = 'button';
+                    sq.className = 'square ' + (isLight ? 'light' : 'dark');
+                    sq.dataset.square = file + rank;
+                    sq.addEventListener('click', function() { handleSquareClick(sq.dataset.square); });
+                    boardEl.appendChild(sq);
+                    squareEls.set(file + rank, sq);
                 });
             });
-        }
-
-        function parseFen(fen) {
-            const parts = fen.trim().split(/\s+/);
-            if (!parts.length) return null;
-
-            const rows = parts[0].split('/');
-            if (rows.length !== 8) return null;
-
-            const parsed = [];
-            for (let r = 0; r < rows.length; r += 1) {
-                const row = [];
-                let file = 0;
-                for (const ch of rows[r]) {
-                    if (/\d/.test(ch)) {
-                        const empty = parseInt(ch, 10);
-                        for (let i = 0; i < empty; i += 1) {
-                            row.push(null);
-                        }
-                        file += empty;
-                    } else {
-                        row.push(ch);
-                        file += 1;
-                    }
-                }
-                if (file !== 8) return null;
-                parsed.push(row);
-            }
-
-            const turn = parts[1] === 'b' ? 'b' : 'w';
-            return { board: parsed, turn };
-        }
-
-        function buildFen() {
-            const rows = board.map((row) => {
-                let line = '';
-                let empty = 0;
-                row.forEach((piece) => {
-                    if (!piece) {
-                        empty += 1;
-                        return;
-                    }
-                    if (empty > 0) {
-                        line += empty.toString();
-                        empty = 0;
-                    }
-                    line += piece;
-                });
-                if (empty > 0) {
-                    line += empty.toString();
-                }
-                return line;
-            });
-            const placement = rows.join('/');
-            const fullmove = Math.floor(gameSeq / 2) + 1;
-            return `${placement} ${currentTurn} - - 0 ${fullmove}`;
-        }
-
-        function setBoardFromFen(fen) {
-            const parsed = parseFen(fen);
-            if (!parsed) return false;
-            board = parsed.board;
-            currentTurn = parsed.turn;
-            return true;
         }
 
         function renderBoard() {
-            squareEls.forEach((el, square) => {
-                const idx = squareToIndex(square);
-                const piece = board[idx.r][idx.f];
-                const symbol = piece ? pieceSymbols[piece] : '';
-                if (symbol) {
-                    el.innerHTML = symbol;
-                } else {
-                    el.textContent = piece || '';
-                }
+            squareEls.forEach(function(el, square) {
+                var idx = squareToIndex(square);
+                var piece = board[idx.r][idx.f];
+                var symbol = piece ? pieceSymbols[piece] : '';
+                el.innerHTML = symbol || '';
                 el.classList.toggle('selected', square === selectedSquare);
                 el.classList.remove('piece-white', 'piece-black');
                 if (piece) {
@@ -507,10 +635,63 @@
             });
         }
 
-        function squareToIndex(square) {
-            const file = files.indexOf(square[0]);
-            const rank = ranks.indexOf(square[1]);
-            return { r: rank, f: file };
+        /* ═══════════════════════════════════════════
+           FEN PARSING / BUILDING
+        ═══════════════════════════════════════════ */
+        function parseFen(fen) {
+            var parts = fen.trim().split(/\s+/);
+            if (!parts.length) return null;
+            var rows = parts[0].split('/');
+            if (rows.length !== 8) return null;
+            var parsed = [];
+            for (var r = 0; r < 8; r++) {
+                var row = [];
+                var fileCount = 0;
+                for (var ci = 0; ci < rows[r].length; ci++) {
+                    var ch = rows[r][ci];
+                    if (/\d/.test(ch)) {
+                        var empty = parseInt(ch, 10);
+                        for (var i = 0; i < empty; i++) row.push(null);
+                        fileCount += empty;
+                    } else {
+                        row.push(ch);
+                        fileCount++;
+                    }
+                }
+                if (fileCount !== 8) return null;
+                parsed.push(row);
+            }
+            return { board: parsed, turn: parts[1] === 'b' ? 'b' : 'w' };
+        }
+
+        function buildFen() {
+            var rows = board.map(function(row) {
+                var line = '', empty = 0;
+                row.forEach(function(piece) {
+                    if (!piece) { empty++; return; }
+                    if (empty > 0) { line += empty; empty = 0; }
+                    line += piece;
+                });
+                if (empty > 0) line += empty;
+                return line;
+            });
+            var fullmove = Math.floor(gameSeq / 2) + 1;
+            return rows.join('/') + ' ' + currentTurn + ' - - 0 ' + fullmove;
+        }
+
+        function setBoardFromFen(fen) {
+            var parsed = parseFen(fen);
+            if (!parsed) return false;
+            board = parsed.board;
+            currentTurn = parsed.turn;
+            return true;
+        }
+
+        /* ═══════════════════════════════════════════
+           MOVE LOGIC
+        ═══════════════════════════════════════════ */
+        function squareToIndex(sq) {
+            return { r: ranks.indexOf(sq[1]), f: files.indexOf(sq[0]) };
         }
 
         function getPieceColor(piece) {
@@ -518,207 +699,173 @@
             return piece === piece.toUpperCase() ? 'w' : 'b';
         }
 
-        function isInsideBoard(pos) {
-            return pos.r >= 0 && pos.r < 8 && pos.f >= 0 && pos.f < 8;
-        }
+        function isInsideBoard(pos) { return pos.r >= 0 && pos.r < 8 && pos.f >= 0 && pos.f < 8; }
 
-        function isClearPath(boardState, from, to) {
-            const stepR = Math.sign(to.r - from.r);
-            const stepF = Math.sign(to.f - from.f);
-            let r = from.r + stepR;
-            let f = from.f + stepF;
+        function isClearPath(bs, from, to) {
+            var sr = Math.sign(to.r - from.r), sf = Math.sign(to.f - from.f);
+            var r = from.r + sr, f = from.f + sf;
             while (r !== to.r || f !== to.f) {
-                if (boardState[r][f]) {
-                    return false;
-                }
-                r += stepR;
-                f += stepF;
+                if (bs[r][f]) return false;
+                r += sr; f += sf;
             }
             return true;
         }
 
-        function cloneBoard(boardState) {
-            return boardState.map((row) => row.slice());
-        }
+        function cloneBoard(bs) { return bs.map(function(r) { return r.slice(); }); }
 
-        function applyMoveOnBoard(boardState, move, promotion) {
-            const from = squareToIndex(move.from);
-            const to = squareToIndex(move.to);
+        function applyMoveOnBoard(bs, move, promo) {
+            var from = squareToIndex(move.from), to = squareToIndex(move.to);
             if (!isInsideBoard(from) || !isInsideBoard(to)) return false;
-
-            const piece = boardState[from.r][from.f];
+            var piece = bs[from.r][from.f];
             if (!piece) return false;
-
-            boardState[from.r][from.f] = null;
-            let nextPiece = piece;
-
-            if (promotion && piece.toLowerCase() === 'p') {
-                nextPiece = piece === piece.toUpperCase() ? promotion.toUpperCase() : promotion.toLowerCase();
+            bs[from.r][from.f] = null;
+            var np = piece;
+            if (promo && piece.toLowerCase() === 'p') {
+                np = piece === piece.toUpperCase() ? promo.toUpperCase() : promo.toLowerCase();
             }
-
-            boardState[to.r][to.f] = nextPiece;
+            bs[to.r][to.f] = np;
             return true;
         }
 
-        function canPieceAttack(piece, from, to, boardState) {
-            const type = piece.toLowerCase();
-            const color = getPieceColor(piece);
-            const deltaR = to.r - from.r;
-            const deltaF = to.f - from.f;
-            const absR = Math.abs(deltaR);
-            const absF = Math.abs(deltaF);
-
-            if (type === 'p') {
-                const dir = color === 'w' ? -1 : 1;
-                return deltaR === dir && absF === 1;
-            }
-
-            if (type === 'n') {
-                return (absR === 2 && absF === 1) || (absR === 1 && absF === 2);
-            }
-
-            if (type === 'b') {
-                return absR === absF && isClearPath(boardState, from, to);
-            }
-
-            if (type === 'r') {
-                return (deltaR === 0 || deltaF === 0) && isClearPath(boardState, from, to);
-            }
-
-            if (type === 'q') {
-                const straight = deltaR === 0 || deltaF === 0;
-                const diagonal = absR === absF;
-                return (straight || diagonal) && isClearPath(boardState, from, to);
-            }
-
-            if (type === 'k') {
-                return absR <= 1 && absF <= 1;
-            }
-
+        function canPieceAttack(piece, from, to, bs) {
+            var type = piece.toLowerCase();
+            var color = getPieceColor(piece);
+            var dr = to.r - from.r, df = to.f - from.f;
+            var ar = Math.abs(dr), af = Math.abs(df);
+            if (type === 'p') return dr === (color === 'w' ? -1 : 1) && af === 1;
+            if (type === 'n') return (ar === 2 && af === 1) || (ar === 1 && af === 2);
+            if (type === 'b') return ar === af && isClearPath(bs, from, to);
+            if (type === 'r') return (dr === 0 || df === 0) && isClearPath(bs, from, to);
+            if (type === 'q') return ((dr === 0 || df === 0) || ar === af) && isClearPath(bs, from, to);
+            if (type === 'k') return ar <= 1 && af <= 1;
             return false;
         }
 
-        function isSquareAttacked(target, attackerColor, boardState) {
-            for (let r = 0; r < 8; r += 1) {
-                for (let f = 0; f < 8; f += 1) {
-                    const piece = boardState[r][f];
-                    if (!piece) continue;
-                    if (getPieceColor(piece) !== attackerColor) continue;
-                    if (canPieceAttack(piece, { r, f }, target, boardState)) {
-                        return true;
-                    }
+        function isSquareAttacked(target, attackerColor, bs) {
+            for (var r = 0; r < 8; r++)
+                for (var f = 0; f < 8; f++) {
+                    var p = bs[r][f];
+                    if (p && getPieceColor(p) === attackerColor && canPieceAttack(p, {r:r,f:f}, target, bs)) return true;
                 }
-            }
             return false;
         }
 
-        function isKingInCheck(color, boardState) {
-            const kingSymbol = color === 'w' ? 'K' : 'k';
-            let kingPos = null;
-
-            for (let r = 0; r < 8; r += 1) {
-                for (let f = 0; f < 8; f += 1) {
-                    if (boardState[r][f] === kingSymbol) {
-                        kingPos = { r, f };
-                        break;
-                    }
-                }
-                if (kingPos) break;
-            }
-
-            if (!kingPos) return false;
-
-            const attackerColor = color === 'w' ? 'b' : 'w';
-            return isSquareAttacked(kingPos, attackerColor, boardState);
+        function isKingInCheck(color, bs) {
+            var king = color === 'w' ? 'K' : 'k';
+            var kp = null;
+            for (var r = 0; r < 8; r++)
+                for (var f = 0; f < 8; f++)
+                    if (bs[r][f] === king) { kp = {r:r,f:f}; break; }
+            if (!kp) return false;
+            return isSquareAttacked(kp, color === 'w' ? 'b' : 'w', bs);
         }
 
-        function isLegalMove(move, promotion) {
-            const from = squareToIndex(move.from);
-            const to = squareToIndex(move.to);
+        function hasLegalMoves(color) {
+            for (var r = 0; r < 8; r++)
+                for (var f = 0; f < 8; f++) {
+                    var p = board[r][f];
+                    if (!p || getPieceColor(p) !== color) continue;
+                    var fromSq = files[f] + ranks[r];
+                    for (var tr = 0; tr < 8; tr++)
+                        for (var tf = 0; tf < 8; tf++) {
+                            var toSq = files[tf] + ranks[tr];
+                            var move = {from: fromSq, to: toSq};
+                            var promo = maybePromotion(p, toSq);
+                            if (isLegalMove(move, promo)) return true;
+                        }
+                }
+            return false;
+        }
+
+        function isLegalMove(move, promo) {
+            var from = squareToIndex(move.from), to = squareToIndex(move.to);
             if (!isInsideBoard(from) || !isInsideBoard(to)) return false;
             if (from.r === to.r && from.f === to.f) return false;
-
-            const piece = board[from.r][from.f];
+            var piece = board[from.r][from.f];
             if (!piece) return false;
-
-            const color = getPieceColor(piece);
+            var color = getPieceColor(piece);
             if (color !== currentTurn) return false;
-
-            const target = board[to.r][to.f];
+            var target = board[to.r][to.f];
             if (target && getPieceColor(target) === color) return false;
 
-            const type = piece.toLowerCase();
-            const deltaR = to.r - from.r;
-            const deltaF = to.f - from.f;
-            const absR = Math.abs(deltaR);
-            const absF = Math.abs(deltaF);
+            var type = piece.toLowerCase();
+            var dr = to.r - from.r, df = to.f - from.f;
+            var ar = Math.abs(dr), af = Math.abs(df);
 
             if (type === 'p') {
-                const dir = color === 'w' ? -1 : 1;
-                const startRow = color === 'w' ? 6 : 1;
-
-                if (deltaF === 0) {
-                    if (deltaR === dir && !target) {
-                    } else if (deltaR === 2 * dir && from.r === startRow && !target) {
-                        const between = { r: from.r + dir, f: from.f };
-                        if (board[between.r][between.f]) return false;
-                    } else {
-                        return false;
-                    }
-                } else if (absF === 1 && deltaR === dir) {
+                var dir = color === 'w' ? -1 : 1;
+                var startRow = color === 'w' ? 6 : 1;
+                if (df === 0) {
+                    if (dr === dir && !target) { /* ok */ }
+                    else if (dr === 2 * dir && from.r === startRow && !target && !board[from.r + dir][from.f]) { /* ok */ }
+                    else return false;
+                } else if (af === 1 && dr === dir) {
                     if (!target || getPieceColor(target) === color) return false;
-                } else {
-                    return false;
-                }
+                } else return false;
             } else if (type === 'n') {
-                if (!((absR === 2 && absF === 1) || (absR === 1 && absF === 2))) {
-                    return false;
-                }
+                if (!((ar === 2 && af === 1) || (ar === 1 && af === 2))) return false;
             } else if (type === 'b') {
-                if (absR !== absF || !isClearPath(board, from, to)) return false;
+                if (ar !== af || !isClearPath(board, from, to)) return false;
             } else if (type === 'r') {
-                if ((deltaR !== 0 && deltaF !== 0) || !isClearPath(board, from, to)) return false;
+                if ((dr !== 0 && df !== 0) || !isClearPath(board, from, to)) return false;
             } else if (type === 'q') {
-                const straight = deltaR === 0 || deltaF === 0;
-                const diagonal = absR === absF;
-                if ((!straight && !diagonal) || !isClearPath(board, from, to)) return false;
+                if ((!((dr === 0 || df === 0) || (ar === af))) || !isClearPath(board, from, to)) return false;
             } else if (type === 'k') {
-                if (absR > 1 || absF > 1) return false;
-            } else {
-                return false;
-            }
+                if (ar > 1 || af > 1) return false;
+            } else return false;
 
-            const testBoard = cloneBoard(board);
-            applyMoveOnBoard(testBoard, move, promotion);
-            if (isKingInCheck(color, testBoard)) return false;
-
+            var tb = cloneBoard(board);
+            applyMoveOnBoard(tb, move, promo);
+            if (isKingInCheck(color, tb)) return false;
             return true;
         }
 
-        function applyMove(move, promotion) {
-            if (!applyMoveOnBoard(board, move, promotion)) return false;
+        function applyMove(move, promo) {
+            if (!applyMoveOnBoard(board, move, promo)) return false;
             currentTurn = currentTurn === 'w' ? 'b' : 'w';
             return true;
         }
 
-        function maybePromotion(piece, toSquare) {
+        function maybePromotion(piece, toSq) {
             if (!piece || piece.toLowerCase() !== 'p') return null;
-            const targetRank = toSquare[1];
-            if (targetRank === '8' || targetRank === '1') {
-                return 'q';
-            }
-            return null;
+            return (toSq[1] === '8' || toSq[1] === '1') ? 'q' : null;
         }
 
-        function handleSquareClick(square) {
-            if (!roomCode) return;
+        function checkGameEnd() {
+            if (gameOver) return;
+            var inCheck = isKingInCheck(currentTurn, board);
+            var hasMovesLeft = hasLegalMoves(currentTurn);
 
-            const idx = squareToIndex(square);
-            const piece = board[idx.r][idx.f];
+            if (!hasMovesLeft) {
+                gameOver = true;
+                stopClock();
+                if (inCheck) {
+                    var winner = currentTurn === 'w' ? 'Pretas' : 'Brancas';
+                    showGameOver('Xeque-mate!', winner + ' vencem por xeque-mate!');
+                    addSystemChat('Xeque-mate! ' + winner + ' vencem!');
+                } else {
+                    showGameOver('Empate', 'Afogamento (stalemate). Partida empatada.');
+                    addSystemChat('Empate por afogamento.');
+                }
+            } else if (inCheck) {
+                addSystemChat((currentTurn === 'w' ? 'Brancas' : 'Pretas') + ' estao em xeque!');
+            }
+        }
+
+        /* ═══════════════════════════════════════════
+           SQUARE CLICK
+        ═══════════════════════════════════════════ */
+        function handleSquareClick(square) {
+            if (!roomCode || gameOver) return;
+            if (myColor === 'spectator') return;
+            if (currentTurn !== myColor) return;
+
+            var idx = squareToIndex(square);
+            var piece = board[idx.r][idx.f];
 
             if (!selectedSquare) {
                 if (!piece) return;
-                if (getPieceColor(piece) !== currentTurn) return;
+                if (getPieceColor(piece) !== myColor) return;
                 selectedSquare = square;
                 renderBoard();
                 return;
@@ -730,295 +877,313 @@
                 return;
             }
 
-            const fromIdx = squareToIndex(selectedSquare);
-            const movingPiece = board[fromIdx.r][fromIdx.f];
-            if (!movingPiece) {
-                selectedSquare = null;
+            var fromIdx = squareToIndex(selectedSquare);
+            var movingPiece = board[fromIdx.r][fromIdx.f];
+            if (!movingPiece) { selectedSquare = null; renderBoard(); return; }
+
+            if (piece && getPieceColor(piece) === myColor) {
+                selectedSquare = square;
                 renderBoard();
                 return;
             }
 
-            if (piece && getPieceColor(piece) === getPieceColor(movingPiece)) {
-                if (getPieceColor(piece) === currentTurn) {
-                    selectedSquare = square;
-                    renderBoard();
-                }
-                return;
-            }
-            const promotion = maybePromotion(movingPiece, square);
-            const move = { from: selectedSquare, to: square };
-            if (promotion) {
-                move.promotion = promotion;
-            }
+            var promo = maybePromotion(movingPiece, square);
+            var move = { from: selectedSquare, to: square };
+            if (promo) move.promotion = promo;
 
-            if (!isLegalMove(move, promotion)) {
-                return;
-            }
+            if (!isLegalMove(move, promo)) return;
 
-            if (applyMove(move, promotion)) {
-                gameSeq += 1;
+            if (applyMove(move, promo)) {
+                gameSeq++;
                 selectedSquare = null;
-                const fen = buildFen();
+                if (!clockStarted) startClock();
+
+                var fen = buildFen();
                 updateUi(fen);
                 renderBoard();
-                sendMessage({
+                renderClocks();
+
+                sendWsMessage({
                     type: 'chess/move',
-                    gameId,
+                    gameId: gameId,
                     seq: gameSeq,
-                    move,
-                    fen
+                    move: move,
+                    fen: fen,
+                    clockWhite: clockWhite,
+                    clockBlack: clockBlack
                 });
+
+                checkGameEnd();
             } else {
                 selectedSquare = null;
                 renderBoard();
             }
         }
 
+        /* ═══════════════════════════════════════════
+           UI HELPERS
+        ═══════════════════════════════════════════ */
         function updateUi(fenOverride) {
-            const fen = fenOverride || buildFen();
-            const fenInput = document.getElementById('fenInput');
-            fenInput.value = fen;
-            document.getElementById('seqLabel').textContent = gameSeq.toString();
-            document.getElementById('turnLabel').textContent = `Turn: ${currentTurn}`;
-            document.getElementById('roomLabel').textContent = roomCode ? `Room: ${roomCode}` : 'Room:';
-            document.getElementById('roomHint').textContent = roomCode ? `Room: ${roomCode}` : 'No room';
+            var fen = fenOverride || buildFen();
+            document.getElementById('fenInput').value = fen;
+            document.getElementById('seqLabel').textContent = gameSeq;
+            document.getElementById('turnLabel').textContent = 'Vez: ' + (currentTurn === 'w' ? 'Brancas' : 'Pretas');
+            document.getElementById('roomLabel').textContent = roomCode ? 'Sala: ' + roomCode : 'Sala:';
+            document.getElementById('roomHint').textContent = roomCode ? 'Sala: ' + roomCode : 'Sem sala';
+        }
+
+        function updateColorBadge() {
+            var badge = document.getElementById('colorBadge');
+            badge.className = 'color-badge';
+            if (myColor === 'w') {
+                badge.classList.add('white');
+                badge.textContent = '\u2659 Brancas';
+            } else if (myColor === 'b') {
+                badge.classList.add('black');
+                badge.textContent = '\u265F Pretas';
+            } else {
+                badge.classList.add('spectator');
+                badge.textContent = 'Espectador';
+            }
         }
 
         function updateStatus(text, connected) {
-            document.getElementById('statusText').textContent = text;
             document.getElementById('statusLabel').textContent = text;
-            const dot = document.getElementById('statusDot');
-            if (connected) {
-                dot.classList.remove('disconnected');
-            } else {
-                dot.classList.add('disconnected');
-            }
+            var dot = document.getElementById('statusDot');
+            dot.classList.toggle('disconnected', !connected);
         }
 
-        function showError(message) {
-            const errorEl = document.getElementById('errorMsg');
-            errorEl.textContent = message;
-            errorEl.style.display = 'block';
+        function showError(msg) {
+            var el = document.getElementById('errorMsg');
+            el.textContent = msg;
+            el.style.display = 'block';
         }
+        function hideError() { document.getElementById('errorMsg').style.display = 'none'; }
 
-        function hideError() {
-            document.getElementById('errorMsg').style.display = 'none';
-        }
-
+        /* ═══════════════════════════════════════════
+           WEBSOCKET
+        ═══════════════════════════════════════════ */
         function connectWs() {
-            if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) {
-                return;
-            }
+            if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) return;
+            var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
+            ws = new WebSocket(protocol + '://' + location.host + '/ws');
 
-            const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
-            ws = new WebSocket(`${protocol}://${window.location.host}/ws`);
-
-            ws.addEventListener('open', () => {
-                updateStatus('Connected', true);
-                if (pendingHello && roomCode) {
-                    sendHello();
-                    pendingHello = false;
-                }
+            ws.addEventListener('open', function() {
+                updateStatus('Conectado', true);
+                if (pendingHello && roomCode) { sendHello(); pendingHello = false; }
             });
-
-            ws.addEventListener('close', () => {
-                updateStatus('Disconnected', false);
-                scheduleReconnect();
-            });
-
-            ws.addEventListener('message', (event) => {
-                handleWsMessage(event.data);
-            });
-
-            ws.addEventListener('error', () => {
-                updateStatus('Disconnected', false);
-            });
+            ws.addEventListener('close', function() { updateStatus('Desconectado', false); scheduleReconnect(); });
+            ws.addEventListener('message', function(e) { handleWsMessage(e.data); });
+            ws.addEventListener('error', function() { updateStatus('Desconectado', false); });
         }
 
         function scheduleReconnect() {
             if (reconnectTimer || !roomCode) return;
-            reconnectTimer = setTimeout(() => {
-                reconnectTimer = null;
-                connectWs();
-            }, 1500);
+            reconnectTimer = setTimeout(function() { reconnectTimer = null; connectWs(); }, 1500);
         }
 
-        function sendMessage(payload) {
-            if (!ws || ws.readyState !== WebSocket.OPEN) {
-                showError('Not connected to local server.');
-                return false;
-            }
+        function sendWsMessage(payload) {
+            if (!ws || ws.readyState !== WebSocket.OPEN) return false;
             ws.send(JSON.stringify(payload));
             return true;
         }
 
         function sendHello() {
-            sendMessage({
-                type: 'chess/hello',
-                roomCode,
-                gameId
-            });
-            sendMessage({
-                type: 'chess/state-req',
-                gameId
-            });
+            sendWsMessage({ type: 'chess/hello', roomCode: roomCode, gameId: gameId });
+            sendWsMessage({ type: 'chess/state-req', gameId: gameId });
         }
 
+        /* ═══════════════════════════════════════════
+           ROOM JOIN / LEAVE
+        ═══════════════════════════════════════════ */
         function joinRoom() {
-            const input = document.getElementById('roomCodeInput').value.trim();
-            if (!input) {
-                showError('Room code is required.');
-                return;
-            }
+            var code = document.getElementById('roomCodeInput').value.trim();
+            var nick = document.getElementById('nicknameInput').value.trim();
+            var time = parseInt(document.getElementById('timeSelect').value, 10);
+
+            if (!code) { showError('Codigo da sala e obrigatorio.'); return; }
+            if (!nick || nick.length < 2) { showError('Apelido precisa ter pelo menos 2 caracteres.'); return; }
 
             hideError();
-            roomCode = input;
-            gameId = `room:${roomCode}`;
+            roomCode = code;
+            nickname = nick;
+            gameId = 'room:' + roomCode;
             selectedSquare = null;
             gameSeq = 0;
             currentTurn = 'w';
+            gameOver = false;
+            myColor = null;
+            initialTime = time * 60;
+            clockWhite = initialTime;
+            clockBlack = initialTime;
+            clockStarted = false;
+            stopClock();
+
             setBoardFromFen(startFen);
+            buildBoard();
             renderBoard();
+            renderClocks();
             updateUi();
             showChessScreen();
 
             connectWs();
-            if (ws && ws.readyState === WebSocket.OPEN) {
-                sendHello();
-            } else {
-                pendingHello = true;
-            }
+            if (ws && ws.readyState === WebSocket.OPEN) sendHello();
+            else pendingHello = true;
         }
 
         function leaveRoom() {
             roomCode = null;
             gameId = null;
+            myColor = null;
             pendingHello = false;
+            gameOver = false;
+            stopClock();
+            clockStarted = false;
             updateUi();
             showLoginScreen();
-            if (ws) {
-                ws.close();
-                ws = null;
-            }
+            document.getElementById('chatMessages').innerHTML = '';
+            if (ws) { ws.close(); ws = null; }
         }
 
+        /* ═══════════════════════════════════════════
+           CONTROLS
+        ═══════════════════════════════════════════ */
         function applyFen() {
-            const fenInput = document.getElementById('fenInput').value.trim();
-            if (!fenInput) return;
-            if (!setBoardFromFen(fenInput)) {
-                showError('Invalid FEN.');
-                return;
-            }
-
+            var fenInput = document.getElementById('fenInput').value.trim();
+            if (!fenInput || !setBoardFromFen(fenInput)) { showError('FEN invalida.'); return; }
             hideError();
-            gameSeq += 1;
-            const fen = buildFen();
+            gameSeq++;
+            var fen = buildFen();
             updateUi(fen);
             renderBoard();
-            sendMessage({
-                type: 'chess/state',
-                gameId,
-                seq: gameSeq,
-                fen
-            });
+            sendWsMessage({ type: 'chess/state', gameId: gameId, seq: gameSeq, fen: fen });
         }
 
         function sendState() {
-            gameSeq += 1;
-            const fen = buildFen();
+            gameSeq++;
+            var fen = buildFen();
             updateUi(fen);
-            sendMessage({
-                type: 'chess/state',
-                gameId,
-                seq: gameSeq,
-                fen
-            });
+            sendWsMessage({ type: 'chess/state', gameId: gameId, seq: gameSeq, fen: fen });
         }
 
         function requestSync() {
-            sendMessage({
-                type: 'chess/state-req',
-                gameId
-            });
+            sendWsMessage({ type: 'chess/state-req', gameId: gameId });
         }
 
         function resetBoard() {
             setBoardFromFen(startFen);
-            gameSeq += 1;
-            const fen = buildFen();
+            gameSeq++;
+            gameOver = false;
+            stopClock();
+            clockStarted = false;
+            clockWhite = initialTime;
+            clockBlack = initialTime;
+            var fen = buildFen();
             updateUi(fen);
+            buildBoard();
             renderBoard();
-            sendMessage({
+            renderClocks();
+            sendWsMessage({
                 type: 'chess/state',
-                gameId,
+                gameId: gameId,
                 seq: gameSeq,
-                fen
+                fen: fen,
+                clockWhite: initialTime,
+                clockBlack: initialTime,
+                reset: true
             });
+            addSystemChat('Tabuleiro reiniciado!');
         }
 
+        /* ═══════════════════════════════════════════
+           WS MESSAGE HANDLER
+        ═══════════════════════════════════════════ */
         function handleWsMessage(raw) {
-            let message;
-            try {
-                message = JSON.parse(raw);
-            } catch (err) {
-                return;
-            }
+            var msg;
+            try { msg = JSON.parse(raw); } catch(e) { return; }
+            if (!msg || !msg.type) return;
 
-            if (!message || !message.type) return;
-
-            if (message.type === 'chess/joined') {
-                updateStatus('Connected', true);
-                return;
-            }
-
-            if (message.type === 'chess/error') {
-                showError(message.message || 'Error from server.');
-                return;
-            }
-
-            if (message.type === 'chess/state') {
-                const incomingSeq = typeof message.seq === 'number' ? message.seq : null;
-                if (incomingSeq !== null && incomingSeq < gameSeq) {
-                    return;
-                }
-                if (!message.fen || !setBoardFromFen(message.fen)) {
-                    return;
-                }
-                if (incomingSeq !== null) {
-                    gameSeq = incomingSeq;
-                }
-                updateUi(message.fen);
+            if (msg.type === 'chess/joined') {
+                myColor = msg.color || 'spectator';
+                updateColorBadge();
+                buildBoard();
                 renderBoard();
+                renderClocks();
+                updateStatus('Conectado', true);
+                var colorName = myColor === 'w' ? 'Brancas' : myColor === 'b' ? 'Pretas' : 'Espectador';
+                addSystemChat('Voce entrou na sala como ' + colorName + '.');
                 return;
             }
 
-            if (message.type === 'chess/move') {
-                const incomingSeq = typeof message.seq === 'number' ? message.seq : null;
-                if (incomingSeq !== null && incomingSeq <= gameSeq) {
-                    return;
-                }
+            if (msg.type === 'chess/error') {
+                showError(msg.message || 'Erro do servidor.');
+                return;
+            }
 
-                if (message.fen && setBoardFromFen(message.fen)) {
-                    if (incomingSeq !== null) {
-                        gameSeq = incomingSeq;
-                    }
-                    updateUi(message.fen);
+            if (msg.type === 'chess/chat') {
+                addChatMessage(msg.username || 'Anon', msg.text || '', msg.color, msg.timestamp);
+                return;
+            }
+
+            if (msg.type === 'chess/timeout') {
+                if (!gameOver) {
+                    gameOver = true;
+                    stopClock();
+                    var winner = msg.loserColor === 'w' ? 'Pretas' : 'Brancas';
+                    var loser = msg.loserColor === 'w' ? 'Brancas' : 'Pretas';
+                    showGameOver('Tempo esgotado!', loser + ' perdeu por tempo. ' + winner + ' vencem!');
+                    addSystemChat('Tempo esgotado! ' + loser + ' perdeu por tempo! ' + winner + ' vencem!');
+                }
+                return;
+            }
+
+            if (msg.type === 'chess/state') {
+                var seq = typeof msg.seq === 'number' ? msg.seq : null;
+                if (seq !== null && seq < gameSeq) return;
+                if (!msg.fen || !setBoardFromFen(msg.fen)) return;
+                if (seq !== null) gameSeq = seq;
+                if (typeof msg.clockWhite === 'number') clockWhite = msg.clockWhite;
+                if (typeof msg.clockBlack === 'number') clockBlack = msg.clockBlack;
+                if (msg.reset) {
+                    gameOver = false;
+                    stopClock();
+                    clockStarted = false;
+                }
+                updateUi(msg.fen);
+                renderBoard();
+                renderClocks();
+                return;
+            }
+
+            if (msg.type === 'chess/move') {
+                var seq2 = typeof msg.seq === 'number' ? msg.seq : null;
+                if (seq2 !== null && seq2 <= gameSeq) return;
+
+                if (typeof msg.clockWhite === 'number') clockWhite = msg.clockWhite;
+                if (typeof msg.clockBlack === 'number') clockBlack = msg.clockBlack;
+
+                if (msg.fen && setBoardFromFen(msg.fen)) {
+                    if (seq2 !== null) gameSeq = seq2;
+                    if (!clockStarted) startClock();
+                    updateUi(msg.fen);
                     renderBoard();
+                    renderClocks();
+                    checkGameEnd();
                     return;
                 }
-
-                if (!message.move) return;
-                if (!applyMove(message.move, message.move.promotion)) return;
-                if (incomingSeq !== null) {
-                    gameSeq = incomingSeq;
-                } else {
-                    gameSeq += 1;
-                }
+                if (!msg.move || !applyMove(msg.move, msg.move.promotion)) return;
+                if (seq2 !== null) gameSeq = seq2; else gameSeq++;
+                if (!clockStarted) startClock();
                 updateUi();
                 renderBoard();
+                renderClocks();
+                checkGameEnd();
             }
         }
 
+        /* ═══════════════════════════════════════════
+           SCREENS
+        ═══════════════════════════════════════════ */
         function showLoginScreen() {
             document.getElementById('loginScreen').style.display = 'flex';
             document.getElementById('chessScreen').style.display = 'none';
@@ -1030,18 +1195,21 @@
             document.getElementById('chessScreen').style.display = 'flex';
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
+        /* ═══════════════════════════════════════════
+           INIT
+        ═══════════════════════════════════════════ */
+        document.addEventListener('DOMContentLoaded', function() {
             buildBoard();
             setBoardFromFen(startFen);
             renderBoard();
             updateUi();
+            renderClocks();
             showLoginScreen();
         });
 
-        window.addEventListener('beforeunload', () => {
-            if (ws) {
-                ws.close();
-            }
+        window.addEventListener('beforeunload', function() {
+            stopClock();
+            if (ws) ws.close();
         });
     </script>
 </body>

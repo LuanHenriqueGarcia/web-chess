@@ -33,6 +33,7 @@ class ChatRoom {
     this.messages = [];
     this.socketClients = new Set();
     this.chessClients = new Set();
+    this.chessPlayerColors = new Map();
     this.chessState = null;
     this.chessSeq = -1;
     this.gameId = null;
@@ -147,6 +148,19 @@ class ChatRoom {
     }
 
     if (typeof message.type === 'string' && message.type.startsWith('chess/')) {
+      if (message.type === 'chess/chat') {
+        this.chessClients.forEach(ws => {
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify(message));
+          }
+        });
+        this.peers.forEach(peer => {
+          if (peer !== fromConnection) {
+            this.sendToPeer(peer, message);
+          }
+        });
+        return;
+      }
       this.handleChessFromPeer(message, fromConnection);
     }
   }
@@ -175,6 +189,39 @@ class ChatRoom {
 
   removeChessClient(ws) {
     this.chessClients.delete(ws);
+    this.chessPlayerColors.delete(ws);
+  }
+
+  assignChessColor(ws) {
+    const taken = new Set(this.chessPlayerColors.values());
+    let color = null;
+    if (!taken.has('w')) {
+      color = 'w';
+    } else if (!taken.has('b')) {
+      color = 'b';
+    } else {
+      color = 'spectator';
+    }
+    this.chessPlayerColors.set(ws, color);
+    return color;
+  }
+
+  handleChessChat(message, fromSocket) {
+    const chatMsg = {
+      type: 'chess/chat',
+      username: message.username || 'Anon',
+      text: message.text || '',
+      color: message.color || null,
+      timestamp: Date.now()
+    };
+    this.chessClients.forEach(ws => {
+      if (ws !== fromSocket && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify(chatMsg));
+      }
+    });
+    this.peers.forEach(peer => {
+      this.sendToPeer(peer, chatMsg);
+    });
   }
 
   sendMessage(message) {
@@ -316,6 +363,7 @@ class ChatRoom {
       console.error('Error destroying swarm:', err);
     }
     this.chessClients.clear();
+    this.chessPlayerColors.clear();
     this.peerBuffers.clear();
   }
 }
@@ -402,11 +450,13 @@ wss.on('connection', (ws) => {
 
       ws.roomKey = roomKey;
       room.addChessClient(ws);
+      const assignedColor = room.assignChessColor(ws);
 
       ws.send(JSON.stringify({
         type: 'chess/joined',
         gameId: room.gameId || gameId,
-        roomCode
+        roomCode,
+        color: assignedColor
       }));
 
       room.sendChessStateToSocket(ws);
@@ -420,6 +470,11 @@ wss.on('connection', (ws) => {
     }
 
     const room = activeRooms.get(roomKey);
+
+    if (message.type === 'chess/chat') {
+      room.handleChessChat(message, ws);
+      return;
+    }
 
     if (message.type === 'chess/state-req') {
       room.handleChessFromSocket(message, ws);
@@ -455,11 +510,6 @@ io.on('connection', (socket) => {
       if (userSockets.has(socket.id)) {
         const oldRoom = userSockets.get(socket.id);
         if (activeRooms.has(oldRoom)) {
-          /*   ╱|、      
-              (˚ˎ 。7     
-              |、˜〵     
-              じしˍ,)ノ  
-          */
           activeRooms.get(oldRoom).removeSocketClient(socket.id);
         }
       }
