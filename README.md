@@ -1,3 +1,4 @@
 npm install
 node server.js
-lt --port 3000
+ipconfig
+npx localtunnel --port 3000
