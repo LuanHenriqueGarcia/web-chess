@@ -428,6 +428,7 @@
         </div>
     </div>
 
+    <script src="/config.js"></script>
     <script>
         /* ═══════════════════════════════════════════
            CONSTANTS & STATE
@@ -439,6 +440,11 @@
             K:'&#9812;',Q:'&#9813;',R:'&#9814;',B:'&#9815;',N:'&#9816;',P:'&#9817;',
             k:'&#9818;',q:'&#9819;',r:'&#9820;',b:'&#9821;',n:'&#9822;',p:'&#9823;'
         };
+
+        const configuredApiBase = window.PCCHAT_CONFIG && typeof window.PCCHAT_CONFIG.API_BASE_URL === 'string'
+            ? window.PCCHAT_CONFIG.API_BASE_URL.trim()
+            : '';
+        const apiBaseUrl = configuredApiBase || window.location.origin;
 
         let ws = null;
         let roomCode = null;
@@ -460,6 +466,15 @@
         let clockInterval = null;
         let clockStarted = false;
         let initialTime = 600;
+
+        function buildWsUrl(baseUrl) {
+            var normalized = baseUrl || window.location.origin;
+            if (normalized.charAt(normalized.length - 1) === '/') {
+                normalized = normalized.slice(0, -1);
+            }
+            normalized = normalized.replace(/^http:/i, 'ws:').replace(/^https:/i, 'wss:');
+            return normalized + '/ws';
+        }
 
         /* ═══════════════════════════════════════════
            TABS
@@ -965,8 +980,7 @@
         ═══════════════════════════════════════════ */
         function connectWs() {
             if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) return;
-            var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-            ws = new WebSocket(protocol + '://' + location.host + '/ws');
+            ws = new WebSocket(buildWsUrl(apiBaseUrl));
 
             ws.addEventListener('open', function() {
                 updateStatus('Conectado', true);

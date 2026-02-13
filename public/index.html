@@ -6,8 +6,9 @@
     <meta name="theme-color" content="#0a246a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <title>PCChat v1.1</title>
-    <script src="/socket.io/socket.io.js"></script>
+    <title>UniAlfa Chat v1.1</title>
+    <script src="/config.js"></script>
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -473,11 +474,6 @@
                 </div>
 
                 <div id="messagesContainer" class="messages-container"></div>
-                <!--     ╱|、      
-                        (˚ˎ 。7     
-                        |、˜〵     
-                        じしˍ,)ノ  
-                -->
                 <div class="input-container">
                     <input type="text" id="messageInput" class="message-input" 
                            placeholder="Type your message..." maxlength="500"
@@ -499,6 +495,11 @@
     </div>
 
     <script>
+        const configuredApiBase = window.PCCHAT_CONFIG && typeof window.PCCHAT_CONFIG.API_BASE_URL === 'string'
+            ? window.PCCHAT_CONFIG.API_BASE_URL.trim()
+            : '';
+        const socketBaseUrl = configuredApiBase || window.location.origin;
+
         let socket;
         let currentRoom = null;
         let currentUsername = null;
@@ -506,7 +507,7 @@
         let heartbeatInterval;
 
         function initSocket() {
-            socket = io({
+            socket = io(socketBaseUrl, {
                 timeout: 20000,
                 reconnection: true,
                 reconnectionAttempts: 5,

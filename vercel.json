@@ -1,0 +1,33 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "outputDirectory": "public",
+  "buildCommand": null,
+  "installCommand": null,
+  "cleanUrls": true,
+  "headers": [
+    {
+      "source": "/config.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/chess",
+      "destination": "/chess.html"
+    },
+    {
+      "source": "/config.js",
+      "destination": "/config.js"
+    }
+  ]
+}

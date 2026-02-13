@@ -8,9 +8,16 @@ const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
+const socketCorsOrigin = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim()).filter(Boolean)
+  : true;
 const io = socketIo(server, {
   pingTimeout: 60000,
-  pingInterval: 25000
+  pingInterval: 25000,
+  cors: {
+    origin: socketCorsOrigin,
+    methods: ['GET', 'POST']
+  }
 });
 const wss = new WebSocket.Server({ noServer: true });
 
